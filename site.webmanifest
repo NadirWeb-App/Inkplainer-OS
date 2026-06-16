@@ -1,0 +1,16 @@
+{
+  "name": "Inkplainer",
+  "short_name": "Inkplainer",
+  "description": "A free whiteboard animation maker.",
+  "start_url": ".",
+  "display": "browser",
+  "background_color": "#d8d8d8",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

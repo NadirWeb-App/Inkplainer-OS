@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#d8d8d8"/>
+  <rect x="94" y="82" width="1012" height="466" rx="28" fill="#fff" stroke="rgba(0,0,0,0.12)" stroke-width="2"/>
+  <rect x="150" y="146" width="86" height="86" rx="22" fill="#1a1a1a"/>
+  <path d="M177 207h34" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+  <path d="M204 166a7 7 0 0 1 10 10l-26 26-12 3 3-12 25-27z" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="270" y="193" font-family="Arial, sans-serif" font-size="72" font-weight="700" fill="#111">Inkplainer</text>
+  <text x="154" y="315" font-family="Arial, sans-serif" font-size="44" font-weight="700" fill="#111">Free whiteboard animation maker</text>
+  <text x="154" y="383" font-family="Arial, sans-serif" font-size="30" fill="#525252">Turn images and text into hand-drawn explainer videos.</text>
+  <text x="154" y="442" font-family="Arial, sans-serif" font-size="26" fill="#525252">Browser-based. Desktop-focused. Export as WebM or MP4.</text>
+</svg>

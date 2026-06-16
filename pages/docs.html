@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentation — Inkplainer</title>
+<meta name="description" content="Full documentation for Inkplainer. Learn how to use layers, animation styles, drawing controls, export settings, and everything else the app offers.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://inkplainer.pages.dev/pages/docs.html">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="../site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ── DESIGN TOKENS ── */
+:root {
+  --bg:        #d8d8d8;
+  --sidebar:   #ffffff;
+  --panel:     #f5f5f5;
+  --surface-2: #e4e4e4;
+  --border:    rgba(0,0,0,0.08);
+  --border-hi: rgba(0,0,0,0.14);
+  --accent:    #1a1a1a;
+  --text:      #111111;
+  --muted:     #909090;
+  --muted-hi:  #525252;
+  --header-h:  52px;
+  --nav-w:     240px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Geist', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOP BAR ── */
+#topbar {
+  height: var(--header-h);
+  min-height: var(--header-h);
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.topbar-logo-icon {
+  width: 30px; height: 30px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-hi);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.topbar-logo-icon svg { color: var(--text); }
+.topbar-wordmark {
+  font-family: 'Caveat', cursive;
+  font-size: 20px; font-weight: 700;
+  color: var(--text); letter-spacing: -0.5px;
+}
+.topbar-divider { width: 1px; height: 20px; background: var(--border-hi); }
+.topbar-page-label { font-size: 13px; font-weight: 500; color: var(--muted-hi); }
+.topbar-spacer { flex: 1; }
+.topbar-back {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 500; color: var(--muted-hi);
+  text-decoration: none; padding: 6px 12px;
+  border-radius: 8px; border: 1px solid var(--border-hi);
+  transition: background 0.15s, color 0.15s;
+}
+.topbar-back:hover { background: var(--surface-2); color: var(--text); }
+
+/* ── LAYOUT ── */
+.page-layout {
+  display: flex;
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+/* ── LEFT NAV ── */
+.doc-nav {
+  width: var(--nav-w);
+  min-width: var(--nav-w);
+  position: sticky;
+  top: calc(var(--header-h) + 20px);
+  background: var(--sidebar);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 10px;
+  max-height: calc(100vh - var(--header-h) - 40px);
+  overflow-y: auto;
+}
+.doc-nav::-webkit-scrollbar { width: 4px; }
+.doc-nav::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 4px; }
+
+.nav-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--muted);
+  padding: 4px 10px 8px;
+}
+.nav-section { margin-bottom: 2px; }
+.nav-section-link {
+  display: block; padding: 7px 10px;
+  font-size: 12.5px; font-weight: 600; color: var(--muted-hi);
+  text-decoration: none; border-radius: 8px;
+  transition: background 0.12s, color 0.12s;
+  line-height: 1.3;
+}
+.nav-section-link:hover { background: var(--panel); color: var(--text); }
+.nav-section-link.active { background: var(--accent); color: #fff; }
+.nav-sub-links { padding-left: 10px; margin-top: 2px; display: none; }
+.nav-section-link.active ~ .nav-sub-links { display: block; }
+.nav-sub-link {
+  display: block; padding: 5px 10px;
+  font-size: 11.5px; color: var(--muted);
+  text-decoration: none; border-radius: 6px;
+  transition: background 0.12s, color 0.12s;
+  border-left: 2px solid var(--border-hi);
+  margin-bottom: 1px;
+}
+.nav-sub-link:hover { color: var(--text); background: var(--panel); }
+.nav-divider { height: 1px; background: var(--border); margin: 8px 10px; }
+
+/* ── CONTENT ── */
+.doc-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── HERO ── */
+.doc-hero {
+  background: var(--sidebar);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 36px 40px;
+  margin-bottom: 6px;
+}
+.doc-hero-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 10px;
+}
+.doc-hero-title {
+  font-size: 28px; font-weight: 700; letter-spacing: -0.5px;
+  color: var(--text); margin-bottom: 10px; line-height: 1.2;
+}
+.doc-hero-desc {
+  font-size: 15px; color: var(--muted-hi); line-height: 1.65;
+  max-width: 580px; margin-bottom: 20px;
+}
+.doc-hero-flow {
+  display: flex; align-items: center; gap: 0;
+  flex-wrap: wrap; gap: 6px;
+}
+.flow-step {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--panel); border: 1px solid var(--border-hi);
+  border-radius: 8px; padding: 7px 13px;
+  font-size: 13px; font-weight: 600; color: var(--text);
+}
+.flow-step-num {
+  width: 20px; height: 20px; background: var(--accent);
+  color: #fff; border-radius: 50%; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.flow-arrow { color: var(--muted); font-size: 16px; font-weight: 300; }
+
+/* ── SECTION CARD ── */
+.doc-section {
+  background: var(--sidebar);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 36px 40px;
+  scroll-margin-top: calc(var(--header-h) + 20px);
+}
+
+.section-eyebrow {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+}
+.section-title {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.3px;
+  color: var(--text); margin-bottom: 24px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.section-num {
+  width: 30px; height: 30px; min-width: 30px;
+  background: var(--accent); color: #fff;
+  border-radius: 8px; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── CONTENT ELEMENTS ── */
+.doc-h3 {
+  font-size: 16px; font-weight: 700; color: var(--text);
+  margin: 28px 0 10px; padding-top: 4px;
+  scroll-margin-top: calc(var(--header-h) + 20px);
+}
+.doc-h3:first-child { margin-top: 0; }
+.doc-h4 {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  margin: 20px 0 8px;
+}
+.doc-h4:first-child { margin-top: 0; }
+
+.doc-p {
+  font-size: 14px; color: var(--muted-hi);
+  line-height: 1.75; margin-bottom: 12px;
+}
+.doc-p:last-child { margin-bottom: 0; }
+.doc-p strong { color: var(--text); font-weight: 600; }
+.doc-p em { font-style: italic; }
+.doc-p code {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px; background: var(--panel);
+  border: 1px solid var(--border-hi); border-radius: 4px;
+  padding: 1px 5px; color: var(--text);
+}
+
+.doc-hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+/* ── LISTS ── */
+.doc-ul, .doc-ol {
+  padding-left: 20px; margin-bottom: 14px;
+}
+.doc-ul li, .doc-ol li {
+  font-size: 14px; color: var(--muted-hi);
+  line-height: 1.7; margin-bottom: 5px;
+}
+.doc-ul li strong, .doc-ol li strong { color: var(--text); font-weight: 600; }
+
+/* ── CALLOUT BOXES ── */
+.doc-tip {
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+  border-radius: 10px; padding: 12px 16px;
+  margin: 16px 0; font-size: 13.5px; color: #166534; line-height: 1.6;
+}
+.doc-tip::before { content: '💡 '; }
+.doc-warning {
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: 10px; padding: 12px 16px;
+  margin: 16px 0; font-size: 13.5px; color: #92400e; line-height: 1.6;
+}
+.doc-warning::before { content: '⚠️ '; }
+.doc-note {
+  background: var(--panel); border: 1px solid var(--border-hi);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0; padding: 12px 16px;
+  margin: 16px 0; font-size: 13.5px; color: var(--muted-hi); line-height: 1.6;
+}
+
+/* ── TABLES ── */
+.doc-table-wrap { overflow-x: auto; margin: 16px 0; }
+.doc-table {
+  width: 100%; border-collapse: collapse; font-size: 13.5px;
+}
+.doc-table th {
+  background: var(--panel); color: var(--text);
+  font-weight: 600; font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.4px; padding: 9px 14px; text-align: left;
+  border-bottom: 1px solid var(--border-hi);
+}
+.doc-table td {
+  padding: 10px 14px; color: var(--muted-hi);
+  border-bottom: 1px solid var(--border); line-height: 1.55;
+}
+.doc-table tr:last-child td { border-bottom: none; }
+.doc-table tr:hover td { background: var(--panel); }
+.doc-table td strong { color: var(--text); font-weight: 600; }
+.doc-table td code {
+  font-family: 'Space Mono', monospace; font-size: 11.5px;
+  background: var(--panel); border: 1px solid var(--border-hi);
+  border-radius: 4px; padding: 1px 6px; color: var(--text);
+  white-space: nowrap;
+}
+.doc-table { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+
+/* ── STYLE CARDS (for animation styles, hands, etc.) ── */
+.style-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin: 16px 0;
+}
+.style-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.style-card-title {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  margin-bottom: 5px; display: flex; align-items: center; gap: 6px;
+}
+.style-card-badge {
+  font-size: 10px; font-weight: 600; background: var(--accent);
+  color: #fff; border-radius: 4px; padding: 1px 6px;
+}
+.style-card-desc {
+  font-size: 12.5px; color: var(--muted-hi); line-height: 1.55;
+}
+.style-card-meta {
+  font-size: 11.5px; color: var(--muted); margin-top: 6px;
+  font-style: italic;
+}
+
+/* ── CHECKLIST ── */
+.doc-checklist { list-style: none; padding: 0; margin: 12px 0; }
+.doc-checklist li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 14px; color: var(--muted-hi); line-height: 1.6;
+  padding: 6px 0; border-bottom: 1px solid var(--border);
+}
+.doc-checklist li:last-child { border-bottom: none; }
+.check-box {
+  width: 18px; height: 18px; min-width: 18px;
+  border: 1.5px solid var(--border-hi); border-radius: 4px;
+  margin-top: 2px;
+}
+
+/* ── STEP LIST ── */
+.doc-steps { list-style: none; padding: 0; margin: 12px 0; counter-reset: steps; }
+.doc-steps li {
+  display: flex; gap: 14px; margin-bottom: 10px;
+  font-size: 14px; color: var(--muted-hi); line-height: 1.65;
+  counter-increment: steps;
+}
+.doc-steps li::before {
+  content: counter(steps);
+  width: 24px; height: 24px; min-width: 24px;
+  background: var(--surface-2); border: 1px solid var(--border-hi);
+  border-radius: 50%; font-size: 11.5px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+}
+.doc-steps li strong { color: var(--text); font-weight: 600; }
+
+/* ── KEYBOARD PILL ── */
+kbd {
+  display: inline-flex; align-items: center;
+  font-family: 'Geist', sans-serif; font-size: 11.5px; font-weight: 600;
+  background: var(--panel); border: 1px solid var(--border-hi);
+  border-bottom: 2px solid var(--border-hi);
+  border-radius: 5px; padding: 2px 7px; color: var(--text);
+  white-space: nowrap;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .doc-nav { display: none; }
+  .doc-section { padding: 24px 22px; }
+  .doc-hero { padding: 24px 22px; }
+  .style-grid { grid-template-columns: 1fr; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <a class="topbar-logo" href="../index.html">
+    <div class="topbar-logo-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+      </svg>
+    </div>
+    <span class="topbar-wordmark">Inkplainer</span>
+  </a>
+  <div class="topbar-divider"></div>
+  <span class="topbar-page-label">Documentation</span>
+  <div class="topbar-spacer"></div>
+  <a class="topbar-back" href="../index.html">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back to app
+  </a>
+</div>
+
+<!-- LAYOUT -->
+<div class="page-layout">
+
+  <!-- LEFT NAV -->
+  <nav class="doc-nav">
+    <div class="nav-label">Documentation</div>
+
+    <div class="nav-section">
+      <a class="nav-section-link active" href="#s1">1 — Core Concepts</a>
+      <div class="nav-sub-links">
+        <a class="nav-sub-link" href="#mental-model">The Mental Model</a>
+        <a class="nav-sub-link" href="#canvas">How the Canvas Works</a>
+        <a class="nav-sub-link" href="#sequence">Layer Sequence</a>
+        <a class="nav-sub-link" href="#tabs">The Two Tabs</a>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <a class="nav-section-link" href="#s2">2 — Projects</a>
+      <div class="nav-sub-links">
+        <a class="nav-sub-link" href="#creating">Creating Projects</a>
+        <a class="nav-sub-link" href="#autosave">Auto-Save</a>
+        <a class="nav-sub-link" href="#shortcuts">Keyboard Shortcuts</a>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <a class="nav-section-link" href="#s3">3 — Layers</a>
+      <div class="nav-sub-links">
+        <a class="nav-sub-link" href="#images">Adding Images</a>
+        <a class="nav-sub-link" href="#text">Adding Text</a>
+        <a class="nav-sub-link" href="#layer-list">Layer List</a>
+        <a class="nav-sub-link" href="#anim-order">Animation Order</a>
+        <a class="nav-sub-link" href="#slicer">The Slicer</a>
+        <a class="nav-sub-link" href="#background">Canvas Background</a>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <a class="nav-section-link" href="#s4">4 — Animation Tab</a>
+      <div class="nav-sub-links">
+        <a class="nav-sub-link" href="#presets">Settings Presets</a>
+        <a class="nav-sub-link" href="#basic-styles">Basic Styles</a>
+        <a class="nav-sub-link" href="#specialized">Specialized Styles</a>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <a class="nav-section-link" href="#s5">5 — Drawing Tab</a>
+      <div class="nav-sub-links">
+        <a class="nav-sub-link" href="#outline-modes">Outline Modes</a>
+        <a class="nav-sub-link" href="#stroke-style">Stroke Style</a>
+        <a class="nav-sub-link" href="#detection">Outline Detection</a>
+        <a class="nav-sub-link" href="#fill-options">Fill Options</a>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <a class="nav-section-link" href="#s6">6 — Bottom Bar</a>
+      <div class="nav-sub-links">
+        <a class="nav-sub-link" href="#hands">Hand Style</a>
+        <a class="nav-sub-link" href="#speed">Speed Controls</a>
+        <a class="nav-sub-link" href="#canvas-size">Canvas Size</a>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <a class="nav-section-link" href="#s7">7 — Export</a>
+      <div class="nav-sub-links">
+        <a class="nav-sub-link" href="#generate">Generate</a>
+        <a class="nav-sub-link" href="#playbar">Playbar</a>
+        <a class="nav-sub-link" href="#exporting">Exporting</a>
+        <a class="nav-sub-link" href="#checklist">Export Checklist</a>
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+    <a class="nav-section-link" href="about.html">About Inkplainer</a>
+    <a class="nav-section-link" href="privacy.html">Privacy Policy</a>
+  </nav>
+
+  <!-- CONTENT -->
+  <div class="doc-content">
+
+    <!-- HERO -->
+    <div class="doc-hero">
+      <div class="doc-hero-eyebrow">User Documentation</div>
+      <h1 class="doc-hero-title">How Inkplainer Works</h1>
+      <p class="doc-hero-desc">Everything you need to create hand-drawn whiteboard animations in a desktop browser — from adding your first image to exporting a finished video. Use the sidebar to jump to any section.</p>
+      <div class="doc-hero-flow">
+        <div class="flow-step"><div class="flow-step-num">1</div> Add Layers</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><div class="flow-step-num">2</div> Choose Settings</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><div class="flow-step-num">3</div> Generate</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step"><div class="flow-step-num">4</div> Export</div>
+      </div>
+    </div>
+
+    <!-- ═══ SECTION 1 ═══ -->
+    <div class="doc-section" id="s1">
+      <div class="section-eyebrow">Section 1</div>
+      <h2 class="section-title"><div class="section-num">1</div> Core Concepts</h2>
+
+      <p class="doc-p">Inkplainer takes your images and text and turns them into videos that look like someone is drawing them by hand in real time — the kind of effect you see in explainer videos, educational content, and social media animations. You upload your content, choose how it should be drawn, hit Generate, and the app animates it frame by frame on a canvas. When you're happy with the result, you export it as a video file.</p>
+      <p class="doc-p">There are no subscriptions or required accounts. The editor runs directly in your browser and saves projects locally on your device.</p>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="mental-model">The Mental Model</h3>
+      <p class="doc-p">Before touching any setting, it helps to understand how the app thinks about your project:</p>
+      <ol class="doc-ol">
+        <li><strong>Layers</strong> are the raw material. Every image or piece of text you add becomes its own layer. Layers stack on top of each other on the canvas, just like in any image editor.</li>
+        <li><strong>Settings</strong> tell the app how to draw each layer. You select a layer, then configure its animation style, drawing look, speed, and hand. Every setting you change applies to that specific layer — not to the whole project. Each layer in your animation can look completely different from the others.</li>
+        <li><strong>Generate</strong> is the moment the app reads all your layers and their settings and plays the animation. You can watch it in real time, pause it, restart it, and tweak settings between runs.</li>
+        <li><strong>Export</strong> records the animation as a video file that you can use anywhere.</li>
+      </ol>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="canvas">How the Canvas Works</h3>
+      <p class="doc-p">The canvas is the white (or colored) area in the center of the screen. It is where your animation plays. What you see on the canvas during playback is exactly what will be recorded when you export — no hidden cropping, no re-rendering.</p>
+      <p class="doc-p">The canvas has a fixed resolution you choose (720p, 1080p, or 1440p) and a fixed aspect ratio (16:9, 9:16, or 1:1). When you upload an image, it is automatically scaled and centered to fit within that canvas. You can then reposition and resize it however you like.</p>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="sequence">How Layers Animate in Sequence</h3>
+      <p class="doc-p">When you press Generate, layers animate one after another, in the order you define. As each layer finishes being drawn, it gets permanently "baked" into the background — it stays visible while the next layer animates on top of it.</p>
+      <ul class="doc-ul">
+        <li>Earlier layers are always visible behind later ones</li>
+        <li>Two layers with the <strong>same order number</strong> animate at the same time, in parallel</li>
+      </ul>
+      
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="tabs">The Two Sidebar Tabs: Animation and Drawing</h3>
+      <p class="doc-p"><strong>Animation tab</strong> is designed for speed. It gives you a set of styles that work well out of the box — similar to what you find in other whiteboard animation apps. Pick a style, adjust a couple of sliders, and get a good-looking result in under a minute.</p>
+      <p class="doc-p"><strong>Drawing tab</strong> is designed for control. It gives you detailed options for how outlines are detected, how strokes look, how fills are applied, and how the image is revealed.</p>
+      <p class="doc-p">The two tabs are mutually exclusive per layer — you pick one approach for each layer, not both. If you want the Animation tab's look on one layer and the Drawing tab's look on another, that is completely valid. But a single layer uses either the Animation tab or the Drawing tab, not both at the same time.</p>
+    </div>
+
+    <!-- ═══ SECTION 2 ═══ -->
+    <div class="doc-section" id="s2">
+      <div class="section-eyebrow">Section 2</div>
+      <h2 class="section-title"><div class="section-num">2</div> Projects and the Interface</h2>
+
+      <h3 class="doc-h3" id="creating">Creating a Project</h3>
+      <p class="doc-p">When you first open the app, a new project is created automatically with a randomly generated name like "Bold Sketch" or "Vivid Canvas." To manage your projects, click the <strong>Projects</strong> button in the top bar.</p>
+      <ul class="doc-ul">
+        <li><strong>Create a new project</strong> — click "New Project." The current project is saved automatically before switching.</li>
+        <li><strong>Switch to an existing project</strong> — click its name in the list.</li>
+        <li><strong>Delete a project</strong> — hover over it and click the delete button. This is permanent and cannot be undone.</li>
+      </ul>
+      <div class="doc-note">Projects are stored in your browser using IndexedDB — they live on your device, not in the cloud. They will not transfer automatically to another device or browser.</div>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="autosave">Auto-Save</h3>
+      <p class="doc-p">The app saves your project automatically every time you make a meaningful change. You do not need to press a save button. A small save indicator appears briefly in the top bar each time a save completes.</p>
+      <p class="doc-p">What gets saved per project:</p>
+      <ul class="doc-ul">
+        <li>All layers, including their images, positions, sizes, and every per-layer setting</li>
+        <li>Canvas dimensions and background</li>
+        <li>Global animation settings (hand style, speed, etc.)</li>
+        <li>Layer groups and animation order</li>
+      </ul>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="topbar-ref">The Top Bar</h3>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Element</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Inkplainer logo</strong></td><td>Click to open the dropdown menu (About, Documentation, Privacy Policy)</td></tr>
+            <tr><td><strong>Projects</strong> button</td><td>Opens the Projects modal</td></tr>
+            <tr><td>Project name</td><td>Click to rename the current project</td></tr>
+            <tr><td><strong>↩ Undo / ↪ Redo</strong></td><td>Undo or redo the last change</td></tr>
+            <tr><td><strong>Export Video</strong></td><td>Opens the Export banner above the canvas</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="shortcuts">Keyboard Shortcuts</h3>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>Space</kbd></td><td>Play / Pause the animation</td></tr>
+            <tr><td><kbd>Delete</kbd> or <kbd>Backspace</kbd></td><td>Remove the selected layer (only when not typing)</td></tr>
+            <tr><td><kbd>Ctrl + Z</kbd> / <kbd>Cmd + Z</kbd></td><td>Undo</td></tr>
+            <tr><td><kbd>Ctrl + Shift + Z</kbd> / <kbd>Cmd + Shift + Z</kbd></td><td>Redo</td></tr>
+            <tr><td><kbd>Ctrl + Y</kbd> / <kbd>Cmd + Y</kbd></td><td>Redo (alternative)</td></tr>
+            <tr><td><kbd>Escape</kbd></td><td>Cancel text placement or close text editor without saving</td></tr>
+            <tr><td><kbd>Ctrl + Enter</kbd> / <kbd>Cmd + Enter</kbd></td><td>Confirm and close the text editor</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="doc-note">You cannot undo while the animation is playing. Pause or restart the animation first.</div>
+    </div>
+
+    <!-- ═══ SECTION 3 ═══ -->
+    <div class="doc-section" id="s3">
+      <div class="section-eyebrow">Section 3</div>
+      <h2 class="section-title"><div class="section-num">3</div> Layers</h2>
+
+      <h3 class="doc-h3" id="images">Adding Images</h3>
+      <p class="doc-p">To add an image, use the drop zone in the top section of the right panel. You can drag and drop one or more image files directly, or click the drop zone to open a file browser.</p>
+      <p class="doc-p">Supported formats: <strong>PNG, JPG, GIF, SVG.</strong> You can upload multiple files at once — each file becomes its own layer. The app accepts images of any size and will scale them to fit the canvas automatically.</p>
+      <div class="doc-tip">PNG files with transparency work best with the Drawing tab's outline detection — the transparent areas give the edge-detection algorithms a clean boundary to work with.</div>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="text">Adding Text</h3>
+      <p class="doc-p">Switch to the <strong>Text</strong> tab in the right panel to add a text layer. Configure your text first, then click "Click canvas to place text" and click anywhere on the canvas to drop it.</p>
+      <ul class="doc-ul">
+        <li><strong>Font</strong> — choose from the font picker list</li>
+        <li><strong>Size</strong> — 10–400px</li>
+        <li><strong>Style</strong> — Bold (B) and Italic (I) toggles</li>
+        <li><strong>Alignment</strong> — Left, Center, or Right</li>
+        <li><strong>Line height</strong> — 0.80–2.50</li>
+        <li><strong>Letter spacing</strong> — −5 to 30</li>
+        <li><strong>Color</strong> — 8 preset swatches or a custom color picker</li>
+      </ul>
+      <p class="doc-p">To edit text after placing it, <strong>double-click</strong> it directly on the canvas. Press <kbd>Ctrl + Enter</kbd> to confirm, or <kbd>Escape</kbd> to cancel.</p>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="layer-list">The Layer List</h3>
+      <p class="doc-p">Every layer you add appears in the layer list at the bottom of the right panel, from top to bottom in visual stacking order. Each layer row shows:</p>
+      <ul class="doc-ul">
+        <li><strong>⠿ Drag handle</strong> — drag to reorder layers in the visual stack</li>
+        <li><strong>Eye icon</strong> — toggle visibility. Hidden layers are excluded from the animation</li>
+        <li><strong>Thumbnail</strong> — a preview of the image or text</li>
+        <li><strong>Layer name</strong> — click once to select; click again to rename inline</li>
+        <li><strong>Order field</strong> — controls when this layer animates</li>
+        <li><strong>✕ Delete</strong> — removes the layer (use Undo to recover)</li>
+      </ul>
+      <p class="doc-p">Click any layer to select it and expand its individual controls: <strong>Resize</strong> (10–300%), <strong>Opacity</strong> (0–100%), <strong>Group</strong> assignment, and <strong>Position & Size</strong> (X, Y, W, H coordinates).</p>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="anim-order">Animation Order</h3>
+      <p class="doc-p">The <strong>Order</strong> field on each layer controls when it animates relative to the others.</p>
+      <ul class="doc-ul">
+        <li>Layers animate from the <strong>lowest order number</strong> to the highest</li>
+        <li>Layers with <strong>no order number</strong> animate after all numbered layers, in visual stack order</li>
+        <li>Layers with the <strong>same order number</strong> animate simultaneously — in parallel</li>
+      </ul>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Layer</th><th>Order</th><th>When it animates</th></tr></thead>
+          <tbody>
+            <tr><td>Logo</td><td>1</td><td>First</td></tr>
+            <tr><td>Title text</td><td>1</td><td>Same time as Logo</td></tr>
+            <tr><td>Background</td><td>2</td><td>After both Logo and Title finish</td></tr>
+            <tr><td>Chart</td><td>(blank)</td><td>Last, after Background</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="slicer">The Slicer</h3>
+      <p class="doc-p">The Slicer cuts one layer into multiple new layers, each with its own independent animation. Select a layer and click the <strong>Slice</strong> button above the layer list to open it.</p>
+      <div class="style-grid">
+        <div class="style-card">
+          <div class="style-card-title">Grid mode</div>
+          <div class="style-card-desc">Divides the image into a uniform grid. Set Columns (1–8) and Rows (1–8). Each cell becomes its own layer. Fastest way to slice.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">Rectangles mode</div>
+          <div class="style-card-desc">Draw custom rectangular regions on the preview canvas. Each rectangle becomes a separate layer. More control than Grid.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">Freehand mode</div>
+          <div class="style-card-desc">Click to place polygon points around the area you want to isolate. Most precise option — ideal for irregular shapes and character silhouettes.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">After slicing</div>
+          <div class="style-card-desc">All new layers inherit the original layer's settings. The original layer is removed. Set different animation orders on each new layer independently.</div>
+        </div>
+      </div>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="background">Canvas Background</h3>
+      <p class="doc-p">The canvas background sits behind all layers and is included in the exported video. Choose from solid colors (White, Black, None, Custom) or ten preset textures:</p>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Preset</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Notebook</strong></td><td>Light blue horizontal lines on a pale blue background</td></tr>
+            <tr><td><strong>Graph</strong></td><td>A grid of faint blue lines on white</td></tr>
+            <tr><td><strong>Cream</strong></td><td>A warm amber-to-gold radial gradient</td></tr>
+            <tr><td><strong>Chalkboard</strong></td><td>A dark green radial gradient — mimics a real chalkboard</td></tr>
+            <tr><td><strong>Soft Gradient</strong></td><td>A subtle purple-to-blue-to-mint diagonal gradient</td></tr>
+            <tr><td><strong>Warm White</strong></td><td>An off-white near-neutral background</td></tr>
+            <tr><td><strong>Blueprint</strong></td><td>A dark blue background with lighter blue grid lines</td></tr>
+            <tr><td><strong>Kraft</strong></td><td>A brown crosshatch pattern on an amber background</td></tr>
+            <tr><td><strong>Dark</strong></td><td>Near-black, suitable for high-contrast or neon-style animations</td></tr>
+            <tr><td><strong>Linen</strong></td><td>A warm beige with a faint horizontal texture</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ SECTION 4 ═══ -->
+    <div class="doc-section" id="s4">
+      <div class="section-eyebrow">Section 4</div>
+      <h2 class="section-title"><div class="section-num">4</div> Animation Tab — Fast and Familiar</h2>
+
+      <p class="doc-p">The Animation tab is the starting point for most projects. Pick a style, optionally adjust the Chunks slider, and press Generate. The styles here are designed to be intuitive and fast — similar to what you find in other whiteboard animation apps.</p>
+
+      <h3 class="doc-h3" id="presets">Settings Presets</h3>
+      <p class="doc-p">The Presets card sits above both tabs. Presets save and restore your entire settings configuration in one click.</p>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Preset</th><th>Style</th><th>Hand</th><th>What it produces</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Quick Reveal</strong></td><td>Scanner</td><td>Ghost</td><td>Fast clean reveal with no visible hand</td></tr>
+            <tr><td><strong>Sketch Artist</strong></td><td>Contour</td><td>Hand 1</td><td>Slow artistic contour with a charcoal stroke feel</td></tr>
+            <tr><td><strong>Blueprint</strong></td><td>Outline Only</td><td>Ghost</td><td>Technical drafting lines on a dark background</td></tr>
+            <tr><td><strong>Illustrated</strong></td><td>Illust Fill</td><td>Hand 1</td><td>Full illustrated look with color fills</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="doc-p">To save a custom preset, click <strong>"+ Save current settings"</strong> at the bottom of the Presets card. Up to 6 custom presets can be saved.</p>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="basic-styles">Basic Animation Styles</h3>
+      <div class="style-grid">
+        <div class="style-card">
+          <div class="style-card-title">Chunk Jump <span class="style-card-badge">Default</span></div>
+          <div class="style-card-desc">The canvas is divided into tiles. Each tile pops into view one at a time. Rapid and energetic — content materializes in confident jumps.</div>
+          <div class="style-card-meta">Best for: general-purpose animation, icons, diagrams, product images. Works on virtually any image.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">Scanner</div>
+          <div class="style-card-desc">Image revealed in horizontal bands sweeping left to right, top to bottom. Includes a Zigzag toggle to alternate scan direction like a typewriter.</div>
+          <div class="style-card-meta">Best for: wide landscape images, banners, backgrounds, methodical reveals.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">Contour</div>
+          <div class="style-card-desc">Two phases: first traces the visible silhouette pixel by pixel, then fills the interior with tight zigzag hatching strokes.</div>
+          <div class="style-card-meta">Best for: portraits, character art, logos with clear silhouettes.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">Outline Chunks</div>
+          <div class="style-card-desc">Detects edges, groups them into chunks, and draws each chunk one at a time. Builds up as a collection of strokes rather than tiles.</div>
+          <div class="style-card-meta">Best for: diagrams, technical drawings, illustrations with strong graphic lines.</div>
+        </div>
+      </div>
+      <p class="doc-p">The <strong>Chunks slider (6–80)</strong> appears for Chunk Jump and Outline Chunks. Low values (6–15) = large chunks that appear quickly. High values (50–80) = many small tiles building up gradually.</p>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="specialized">Specialized Animation Styles</h3>
+      <p class="doc-p">The seven Specialized styles use the same reveal engine as Chunk Jump, but apply a <strong>subject-aware spatial priority map</strong> — each one draws in an order that feels natural for that type of subject.</p>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Style</th><th>Drawing order</th><th>Best for</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Human</strong></td><td>Head → shoulders → torso → legs</td><td>Full-body illustrations of people</td></tr>
+            <tr><td><strong>Animal</strong></td><td>Left (head) → right (tail)</td><td>Side-profile illustrations of animals</td></tr>
+            <tr><td><strong>Portrait</strong></td><td>Eyes/nose center → radiates outward</td><td>Close-up face portraits and headshots</td></tr>
+            <tr><td><strong>Vehicle</strong></td><td>Front (left) → rear (right)</td><td>Side-profile illustrations of cars, trucks, aircraft</td></tr>
+            <tr><td><strong>Building</strong></td><td>Foundation → roof</td><td>Architectural illustrations and building diagrams</td></tr>
+            <tr><td><strong>Landscape</strong></td><td>Sky/horizon → midground → foreground</td><td>Nature scenes and environmental illustrations</td></tr>
+            <tr><td><strong>Spiral</strong></td><td>Visual center → outward in a spiral</td><td>Circular compositions, centered logos</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="doc-tip">Use Basic styles for abstract graphics, charts, and icons. Use Specialized styles when the image has a clear real-world subject and you want the drawing order to feel intentional. A Chunks value of 30–40 is a good starting point.</div>
+    </div>
+
+    <!-- ═══ SECTION 5 ═══ -->
+    <div class="doc-section" id="s5">
+      <div class="section-eyebrow">Section 5</div>
+      <h2 class="section-title"><div class="section-num">5</div> Drawing Tab — Advanced Control</h2>
+
+      <p class="doc-p">The Drawing tab controls how the drawing looks — the character of the strokes, the quality of outline detection, whether the original image is revealed at the end, and more.</p>
+
+      <h3 class="doc-h3" id="outline-modes">Outline Animation Modes</h3>
+      <p class="doc-p">An important distinction from the Animation tab: the Drawing tab never reveals the original image during the drawing process. Instead, it actively draws strokes, outlines, and fills from scratch — interpreting your image's edges and colors as drawing instructions. The result is a drawn version of your image, not the original. The exception is the "Reveal original image at the end" option in Fill Options, which places the actual original image on top of everything once drawing is complete — useful when the drawn result works as a process but you want the final frame to be clean.</p>
+      <div class="style-grid">
+        <div class="style-card">
+          <div class="style-card-title">Outline Fill</div>
+          <div class="style-card-desc">Detects and draws outlines as strokes, then optionally reveals the original image on top. Final result shows drawn strokes layered over the real content.</div>
+          <div class="style-card-meta">Best for: product images, photographs, illustrations.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">Illust Fill</div>
+          <div class="style-card-desc">Like Outline Fill but adds a coloring pass after drawing — fills regions to mimic an illustrator blocking in flat color. Looks like a colored illustration.</div>
+          <div class="style-card-meta">Best for: cartoon art, character illustrations, infographics.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">Outline Only</div>
+          <div class="style-card-desc">Draws detected outlines as strokes on the canvas background. No image is shown at any point — not during drawing, and not at the end. The final result is a pure line drawing. This mode has no "Reveal original image" option.</div>
+          <div class="style-card-meta">Best for: technical diagrams, minimalist animations, blueprint-style content.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">✏ Text</div>
+          <div class="style-card-desc">Designed for images of text — logos, title cards, handwritten words. Draws in a chosen direction, character by character or stroke by stroke.</div>
+          <div class="style-card-meta">Best for: brand names, headlines, any image where the primary content is letterforms.</div>
+        </div>
+      </div>
+
+      <hr class="doc-hr">
+
+      <div class="doc-note">The Drawing tab works best with clear illustrations, cartoon-style images, and vector-style artwork — images with well-defined, clean edges that detection algorithms can read reliably. For photographs, the Animation tab is the better choice, since it simply uncovers the original image without trying to interpret it.</div>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="stroke-style">Stroke Style</h3>
+      <div class="style-grid">
+        <div class="style-card">
+          <div class="style-card-title">Default 🖊</div>
+          <div class="style-card-desc">Clean, uniform whiteboard marker line. Consistent thickness, no texture. The classic whiteboard animation look.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">Charcoal ✏️</div>
+          <div class="style-card-desc">Soft, thick, dusty strokes with a gritty texture. Feels academic and organic — like a life-drawing study.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">Sketch 〰</div>
+          <div class="style-card-desc">Four faint overlapping passes along the same path — mimics exploratory strokes before committing to a line. Looks tentative and hand-crafted.</div>
+        </div>
+        <div class="style-card">
+          <div class="style-card-title">Fountain 🪶</div>
+          <div class="style-card-desc">Variable line weight — thin on fast strokes, thick on slow curves. Calligraphic quality. Best on images with smooth flowing outlines.</div>
+        </div>
+      </div>
+      <div class="style-card" style="margin-top:10px;">
+        <div class="style-card-title">Blueprint 📐</div>
+        <div class="style-card-desc">Crisp light-blue technical drafting lines. Designed to be paired with the Blueprint canvas background for a schematic look.</div>
+      </div>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="coloring-style">Coloring Style</h3>
+      <p class="doc-p"><strong>Sparse</strong> — minimal uneven coverage, loose sketchy quality.<br>
+      <strong>Filled</strong> (Default) — complete color coverage, solid and clean.<br>
+      <strong>Watercolor</strong> — soft translucent color that bleeds slightly beyond outlines, painterly and organic.</p>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="detection">Outline Detection</h3>
+      <h4 class="doc-h4">Detection Slider (0–100)</h4>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Range</th><th>Sensitivity</th><th>Best for</th></tr></thead>
+          <tbody>
+            <tr><td>0–30</td><td><strong>Strict</strong></td><td>Bold, clean outlines — graphic art, cartoons, simple diagrams</td></tr>
+            <tr><td>40–60</td><td><strong>Balanced</strong></td><td>Default range — works on most images. Start here.</td></tr>
+            <tr><td>70–100</td><td><strong>Fine</strong></td><td>Thin, faint, low-contrast strokes — pencil sketches, watercolor art</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4 class="doc-h4">Detection Algorithm</h4>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Algorithm</th><th>How it works</th><th>Best for</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Classic</strong> (Default)</td><td>Balanced edge pickup for dark outlines on light backgrounds</td><td>Most illustrations, logos, diagrams, photographs</td></tr>
+            <tr><td><strong>Adaptive</strong></td><td>Analyzes small regions independently for local contrast</td><td>Uneven lighting, textured backgrounds, complex photographs</td></tr>
+            <tr><td><strong>Morph Shell</strong></td><td>Erodes shapes and uses the difference as the border</td><td>Cartoons and anime with solid color regions</td></tr>
+            <tr><td><strong>Canny+</strong></td><td>Links edge fragments into continuous lines</td><td>Vector illustrations, line drawings, crisp graphic design</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="fill-options">Fill Options Card</h3>
+      <p class="doc-p">Appears when <strong>Outline Fill</strong> or <strong>Illust Fill</strong> is selected. Controls what happens after the drawing phase.</p>
+      <h4 class="doc-h4">Image Reveal Animations</h4>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Option</th><th>What it looks like</th></tr></thead>
+          <tbody>
+            <tr><td>Instant ⚡</td><td>The image appears all at once with no transition</td></tr>
+            <tr><td>Fade 🌫 <em>(Default)</em></td><td>The image smoothly fades in over the drawn strokes</td></tr>
+            <tr><td>Dissolve ✦</td><td>The image appears pixel by pixel in a scattered pattern</td></tr>
+            <tr><td>Wipe →</td><td>The image slides in from left to right</td></tr>
+            <tr><td>Iris ◎</td><td>The image expands outward from the center of the canvas</td></tr>
+            <tr><td>Scanlines ≡</td><td>The image builds in through horizontal scan lines</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="doc-p">The <strong>Outline Overlay</strong> controls whether drawn strokes remain visible on top of the revealed image — toggle visibility and set opacity (0–100%). <strong>Outline color</strong> and <strong>thickness</strong> (0.5–8px) control the appearance of the drawn strokes, with an auto-detect option to pull colors from the image itself.</p>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3">Outline Only Options</h3>
+      <p class="doc-p">These two options exist for users who specifically want to use the Drawing tab with real photographs, but it is worth being direct: the Drawing tab is not designed for photos, and results will vary significantly. If you are working with photographs, the Animation tab will almost always produce a better result with less effort.</p>
+      <p class="doc-p"><strong>Color Region Outlines</strong> — finds boundaries between solid-color regions rather than fine ink lines. Slightly more reliable on photos than standard edge detection, but still limited.</p>
+      <p class="doc-p"><strong>Real Image Edges</strong> — gradient-based detection tuned for photographic content, finding object boundaries and structural contours. Pair it with a strict detection slider value (20–40) to reduce clutter.</p>
+      <div class="doc-note">Both options are a last resort for photos. If the result looks wrong, switching to the Animation tab is the right move. Color Region Outlines and Real Image Edges are mutually exclusive — enabling one automatically disables the other.</div>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3">Text Draw Options</h3>
+      <p class="doc-p"><strong>Start Direction</strong> — Left→Right (default), Right→Left, Top→Bottom, Bottom→Top. Controls which part of the text image animates first.</p>
+      <p class="doc-p"><strong>Fill Style</strong> — <em>Reveal</em> (text appears progressively), <em>Outline</em> (traces just the letterform borders), or <em>Outline + Fill</em> (traces then fills the interior — the most "drawn" result).</p>
+    </div>
+
+    <!-- ═══ SECTION 6 ═══ -->
+    <div class="doc-section" id="s6">
+      <div class="section-eyebrow">Section 6</div>
+      <h2 class="section-title"><div class="section-num">6</div> The Bottom Bar</h2>
+
+      <h3 class="doc-h3" id="hands">Hand Style</h3>
+      <p class="doc-p">The hand is the graphic that moves across the canvas during animation — the visual element that sells the "someone is drawing this" illusion. Five options are available: <strong>Ghost</strong>, <strong>Hand 1</strong>, <strong>Hand 2</strong>, <strong>Hand 3</strong>, and <strong>Pen</strong>. Ghost means no hand graphic is shown at all — the drawing happens invisibly, hence the name. The other four are different visual styles of a hand or writing instrument. Choose whichever looks right for your animation — there is no functional difference between them beyond appearance.</p>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="speed">Speed Controls</h3>
+      <p class="doc-p">Two sliders control different aspects of the animation timing independently.</p>
+      <p class="doc-p"><strong>Reveal Speed (1–100)</strong> — how many pixels of image content are revealed per animation tick. This is the primary speed control that determines how long the animation takes from start to finish.</p>
+      <p class="doc-p"><strong>Hand Speed (1–20)</strong> — how fast the hand graphic itself moves across the canvas, independently of reveal speed.</p>
+      <p class="doc-p">Reveal Speed is most effective in the Animation tab, where it directly controls how fast the original image is uncovered. In the Drawing tab, it controls the pace at which strokes are laid down — it still works, but the relationship is less direct since nothing is being revealed. Adjust both sliders to find the timing that feels right for your animation.</p>
+
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="canvas-size">Canvas Size</h3>
+      <div class="doc-warning">Changing the canvas size after adding and positioning layers will rescale and re-center everything automatically. Set your canvas size at the start of a project before adding content.</div>
+      <p class="doc-p"><strong>Aspect Ratio</strong> — 16:9 (landscape, default), 9:16 (portrait/vertical), 1:1 (square)</p>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Resolution</th><th>16:9</th><th>9:16</th><th>1:1</th></tr></thead>
+          <tbody>
+            <tr><td><strong>720p</strong> (Default)</td><td>1280 × 720</td><td>720 × 1280</td><td>720 × 720</td></tr>
+            <tr><td><strong>1080p</strong></td><td>1920 × 1080</td><td>1080 × 1920</td><td>1080 × 1080</td></tr>
+            <tr><td><strong>1440p</strong></td><td>2560 × 1440</td><td>1440 × 2560</td><td>1440 × 1440</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="doc-p">720p is the right choice for most use cases — renders faster and produces smaller files. Use 1080p for large screens or high-resolution embeds. Use 1440p only when output quality genuinely demands it — render time increases significantly.</p>
+    </div>
+
+    <!-- ═══ SECTION 7 ═══ -->
+    <div class="doc-section" id="s7">
+      <div class="section-eyebrow">Section 7</div>
+      <h2 class="section-title"><div class="section-num">7</div> Generating and Exporting</h2>
+
+      <h3 class="doc-h3" id="generate">The Generate Button</h3>
+      <p class="doc-p">The <strong>Generate</strong> button is pinned at the bottom of the left sidebar. Clicking it reads all your layers and their settings, builds the animation from scratch, and begins playing it on the canvas.</p>
+      <p class="doc-p">Every time you change a setting, you need to click Generate again to see the updated result. The canvas does not update in real time while you adjust settings — Generate is always the step that applies your changes.</p>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="playbar">The Playbar</h3>
+      <p class="doc-p">The playbar sits directly below the canvas once an animation has been generated.</p>
+      <ul class="doc-ul">
+        <li><strong>⟳ Restart</strong> — stops and regenerates the animation from the beginning</li>
+        <li><strong>▶ / ⏸ Play / Pause</strong> — toggles playback. Also triggered by <kbd>Space</kbd></li>
+        <li><strong>Progress bar</strong> — click anywhere to seek to that point in the animation</li>
+        <li><strong>% display</strong> — current position as a percentage. 0% = blank canvas, 100% = final frame</li>
+        <li><strong>Done badge</strong> — green badge that appears at 100%, confirming the animation completed</li>
+      </ul>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="exporting">Exporting Your Animation</h3>
+      <p class="doc-p">Click the <strong>Export Video</strong> button in the top bar to open the export banner.</p>
+      <h4 class="doc-h4">Format</h4>
+      <p class="doc-p"><strong>WebM</strong> (Recommended) — modern open format with broad browser support. Best for YouTube, website embeds, and most editing workflows.</p>
+      <p class="doc-p"><strong>MP4 (H.264)</strong> — useful when you need wider compatibility outside the browser. Only available in Chrome and Edge — Firefox and Safari fall back to WebM automatically.</p>
+
+      <h4 class="doc-h4">Quality</h4>
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Option</th><th>Bitrate</th><th>Best for</th></tr></thead>
+          <tbody>
+            <tr><td><strong>High</strong></td><td>8 Mbps</td><td>Final delivery, large screens, archiving</td></tr>
+            <tr><td><strong>Medium</strong> (Default)</td><td>4 Mbps</td><td>General use — good quality, reasonable file size</td></tr>
+            <tr><td><strong>Low</strong></td><td>2 Mbps</td><td>Quick sharing, messaging apps, drafts</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="doc-tip">For YouTube, Instagram, and TikTok, Medium quality is sufficient — these platforms re-encode the video anyway.</div>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3">The Recording Flow</h3>
+      <ol class="doc-steps">
+        <li>Click <strong>Start Recording</strong> in the export banner</li>
+        <li>The animation automatically restarts from the beginning</li>
+        <li>The canvas plays through the entire animation — do not interact with the app during recording</li>
+        <li>When the Done badge appears, recording stops automatically</li>
+        <li>Your browser downloads the video file immediately</li>
+      </ol>
+      <div class="doc-warning">Do not switch browser tabs or minimize the window while recording. Some browsers throttle background tabs, which can cause dropped frames or a corrupted export.</div>
+
+      <hr class="doc-hr">
+
+      <h3 class="doc-h3" id="checklist">Export Checklist</h3>
+      <p class="doc-p">Before clicking Start Recording, run through this list:</p>
+      <ul class="doc-checklist">
+        <li><div class="check-box"></div> Canvas size and aspect ratio are set correctly for the destination platform</li>
+        <li><div class="check-box"></div> All layers are visible (check the eye icon on each layer)</li>
+        <li><div class="check-box"></div> Animation order is set the way you want</li>
+        <li><div class="check-box"></div> You have clicked Generate and watched the full animation at least once</li>
+        <li><div class="check-box"></div> The Done badge appeared, confirming the animation completed without errors</li>
+        <li><div class="check-box"></div> Format is set to your preference (WebM for most uses, MP4 for compatibility)</li>
+        <li><div class="check-box"></div> Quality is set appropriately for the destination</li>
+        <li><div class="check-box"></div> "Export final frame as PNG" is checked if you need a still image</li>
+      </ul>
+    </div>
+
+  </div><!-- /doc-content -->
+</div><!-- /page-layout -->
+
+<script>
+// ── Active nav link on scroll ──
+const sections = document.querySelectorAll('.doc-section');
+const navLinks  = document.querySelectorAll('.nav-section-link');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navLinks.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.nav-section-link[href="#${id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -60% 0px' });
+
+sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
