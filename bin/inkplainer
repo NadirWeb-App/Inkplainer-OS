@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# Inkplainer launcher for a local install (set up by install.sh)
+#
+#   inkplainer          update, start the local server if needed, open the app
+#   inkplainer update   pull the latest version now
+#   inkplainer start    start the local server in the background
+#   inkplainer stop     stop the local server
+#   inkplainer status   show whether the server is running and the version
+
+set -euo pipefail
+
+# Resolve the install directory through the ~/.local/bin symlink
+src="${BASH_SOURCE[0]}"
+while [ -L "$src" ]; do
+  target="$(readlink "$src")"
+  case "$target" in
+    /*) src="$target" ;;
+    *)  src="$(dirname "$src")/$target" ;;
+  esac
+done
+APP_DIR="$(cd "$(dirname "$src")/.." && pwd)"
+
+PORT="$(git -C "$APP_DIR" config --get inkplainer.port 2>/dev/null || echo 8737)"
+PORT="${INKPLAINER_PORT:-$PORT}"
+URL="http://127.0.0.1:$PORT/"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/inkplainer"
+PID_FILE="$STATE_DIR/server.pid"
+LOG_FILE="$STATE_DIR/server.log"
+mkdir -p "$STATE_DIR"
+
+running() {
+  [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null
+}
+
+start() {
+  if running; then return 0; fi
+  nohup python3 "$APP_DIR/bin/serve.py" "$PORT" "$APP_DIR" >"$LOG_FILE" 2>&1 &
+  echo $! > "$PID_FILE"
+  for _ in $(seq 1 50); do
+    if (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then return 0; fi
+    if ! running; then break; fi
+    sleep 0.1
+  done
+  echo "Could not start the Inkplainer server on port $PORT. See $LOG_FILE" >&2
+  exit 1
+}
+
+stop() {
+  if running; then kill "$(cat "$PID_FILE")"; fi
+  rm -f "$PID_FILE"
+}
+
+# Merge one remote branch into the install. Skips quietly when offline; on a
+# conflict, backs out and keeps the current version.
+merge_from() {
+  local remote="$1" branch="$2"
+  git remote get-url "$remote" >/dev/null 2>&1 || return 0
+  if ! git fetch --quiet "$remote" "$branch" 2>/dev/null; then
+    return 0
+  fi
+  if ! git -c user.name=Inkplainer -c user.email=inkplainer@localhost \
+       merge --quiet --no-edit FETCH_HEAD >/dev/null 2>&1; then
+    git merge --abort >/dev/null 2>&1 || true
+    echo "Inkplainer: couldn't apply updates from $remote/$branch; keeping the current version." >&2
+  fi
+}
+
+update() {
+  [ -d "$APP_DIR/.git" ] || return 0
+  (
+    cd "$APP_DIR"
+    export GIT_TERMINAL_PROMPT=0 GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=10
+    local before
+    before="$(git rev-parse HEAD)"
+    merge_from origin "$(git config --get inkplainer.branch || git symbolic-ref --short HEAD)"
+    merge_from upstream "$(git config --get inkplainer.upstreamBranch || echo main)"
+    if [ "$(git rev-parse HEAD)" != "$before" ]; then
+      echo "Inkplainer updated to $(git log -1 --format='%h (%cs)')"
+    fi
+  )
+}
+
+open_app() {
+  # Prefer a Chromium browser in app mode: it supports MP4 export and saving
+  # project files straight to a folder you pick.
+  if [ "$(uname)" = "Darwin" ]; then
+    for app in "Google Chrome" "Microsoft Edge" "Brave Browser" "Chromium"; do
+      if open -Ra "$app" 2>/dev/null; then
+        open -na "$app" --args --app="$URL"
+        return
+      fi
+    done
+    open "$URL"
+  else
+    for b in google-chrome google-chrome-stable microsoft-edge brave-browser chromium chromium-browser; do
+      if command -v "$b" >/dev/null 2>&1; then
+        nohup "$b" --app="$URL" >/dev/null 2>&1 &
+        return
+      fi
+    done
+    xdg-open "$URL" >/dev/null 2>&1 &
+  fi
+}
+
+case "${1:-open}" in
+  open)   update || true; start; open_app ;;
+  update) update ;;
+  start)  start; echo "Inkplainer is running at $URL" ;;
+  stop)   stop; echo "Inkplainer server stopped" ;;
+  status)
+    if running; then echo "Running at $URL"; else echo "Not running"; fi
+    git -C "$APP_DIR" log -1 --format='Version %h (%cs)' 2>/dev/null || true
+    ;;
+  *) echo "Usage: inkplainer [open|update|start|stop|status]" >&2; exit 2 ;;
+esac

@@ -405,6 +405,14 @@ body {
   background: #000;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
+.projects-secondary-btn {
+  background: var(--surface-1);
+  color: var(--text);
+  border: 1px solid var(--border-hi);
+}
+.projects-secondary-btn:hover {
+  background: var(--surface-2);
+}
 
 .projects-list {
   flex: 1;
@@ -477,7 +485,8 @@ body {
   gap: 8px;
 }
 
-.project-delete-btn {
+.project-delete-btn,
+.project-file-btn {
   width: 32px;
   height: 32px;
   background: transparent;
@@ -492,7 +501,8 @@ body {
   opacity: 0;
   color: var(--muted-hi);
 }
-.project-item:hover .project-delete-btn {
+.project-item:hover .project-delete-btn,
+.project-item:hover .project-file-btn {
   opacity: 1;
 }
 .project-delete-btn:hover {
@@ -500,7 +510,13 @@ body {
   border-color: var(--accent2);
   color: var(--accent2);
 }
-.project-delete-btn svg {
+.project-file-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-hi);
+  color: var(--text);
+}
+.project-delete-btn svg,
+.project-file-btn svg {
   width: 14px;
   height: 14px;
 }
@@ -3368,6 +3384,20 @@ input[type="number"]:focus { border-color: var(--accent); }
         </svg>
         New Project
       </button>
+      <button class="projects-new-btn projects-secondary-btn" onclick="openProjectFile()" title="Open a .inkplainer project file">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Open File…
+      </button>
+      <button class="projects-new-btn projects-secondary-btn" onclick="saveProjectToFile()" title="Save the open project to a .inkplainer file">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        Save to File…
+      </button>
+      <input type="file" id="project-file-input" accept=".inkplainer,application/json" hidden onchange="handleProjectFileInput(this)">
     </div>
     
     <div class="projects-list" id="projects-list">
@@ -4353,9 +4383,11 @@ function generateRandomName() {
   return `${adj} ${noun}`;
 }
 
-// Initialize IndexedDB
+// Initialize IndexedDB (safe to call more than once)
+let dbReady = null;
 function initDB() {
-  return new Promise((resolve, reject) => {
+  if (dbReady) return dbReady;
+  return dbReady = new Promise((resolve, reject) => {
     const request = indexedDB.open('WhiteboardAnimatorDB', 1);
     
     request.onerror = () => reject(request.error);
@@ -4377,6 +4409,71 @@ function initDB() {
   });
 }
 
+// Snapshot the editor state into a plain, JSON-safe object (used for
+// auto-save and for saving project files to disk)
+function serializeState() {
+  return {
+    // Canvas settings
+    canvasW: state.canvasW,
+    canvasH: state.canvasH,
+    canvasBg: state.canvasBg,
+    _currentRatio: _currentRatio,
+    _currentRes: _currentRes,
+    
+    // Layers with image data
+    layers: state.layers ? state.layers.map((layer, index) => ({
+      id: layer.id,
+      name: layer.name,
+      savedIndex: index, // preserve visual stack order across async load
+      imageDataURL: getImageDataURL(layer.img), // Convert image to data URL
+      x: layer.x,
+      y: layer.y,
+      w: layer.w,
+      h: layer.h,
+      baseW: layer.baseW,
+      baseH: layer.baseH,
+      resizePct: layer.resizePct,
+      animStyle: layer.animStyle,
+      hand: layer.hand,
+      animOrder: layer.animOrder,
+      opacity: layer.opacity,
+      visible: layer.visible,
+      groupId: layer.groupId,
+      speed: layer.speed,
+      handSpeed: layer.handSpeed,
+      chunks: layer.chunks,
+      specChunks: layer.specChunks,
+      hasPngAlpha: layer.hasPngAlpha,
+      // Layer-specific animation settings
+      outlineDetect: layer.outlineDetect,
+      outlineAlgorithm: layer.outlineAlgorithm,
+      outlineStrokeStyle: layer.outlineStrokeStyle,
+      colorStyle: layer.colorStyle,
+      outlineColor: layer.outlineColor,
+      outlineThickness: layer.outlineThickness,
+      textAnimDir: layer.textAnimDir,
+      textDrawStyle: layer.textDrawStyle,
+      // Text layer properties
+      kind: layer.kind,
+      textProps: layer.textProps,
+    })) : [],
+    
+    selectedLayerId: state.selectedLayerId,
+    groups: state.groups || [],
+    
+    // Animation settings
+    animStyle: state.animStyle,
+    hand: state.hand,
+    zigzag: state.zigzag,
+    
+    // Drawing settings
+    outlineDetect: state.outlineDetect,
+    outlineAlgorithm: state.outlineAlgorithm,
+    outlineStrokeStyle: state.outlineStrokeStyle,
+    colorStyle: state.colorStyle
+  };
+}
+
 // Save current state to project
 function saveProject(projectId = currentProjectId) {
   if (!db || !projectId) return;
@@ -4389,67 +4486,7 @@ function saveProject(projectId = currentProjectId) {
   request.onsuccess = () => {
     const project = request.result;
     if (project) {
-      // Save only essential state data
-      const savedState = {
-        // Canvas settings
-        canvasW: state.canvasW,
-        canvasH: state.canvasH,
-        canvasBg: state.canvasBg,
-        _currentRatio: _currentRatio,
-        _currentRes: _currentRes,
-        
-        // Layers with image data
-        layers: state.layers ? state.layers.map((layer, index) => ({
-          id: layer.id,
-          name: layer.name,
-          savedIndex: index, // preserve visual stack order across async load
-          imageDataURL: getImageDataURL(layer.img), // Convert image to data URL
-          x: layer.x,
-          y: layer.y,
-          w: layer.w,
-          h: layer.h,
-          baseW: layer.baseW,
-          baseH: layer.baseH,
-          resizePct: layer.resizePct,
-          animStyle: layer.animStyle,
-          hand: layer.hand,
-          animOrder: layer.animOrder,
-          opacity: layer.opacity,
-          visible: layer.visible,
-          groupId: layer.groupId,
-          speed: layer.speed,
-          handSpeed: layer.handSpeed,
-          chunks: layer.chunks,
-          specChunks: layer.specChunks,
-          hasPngAlpha: layer.hasPngAlpha,
-          // Layer-specific animation settings
-          outlineDetect: layer.outlineDetect,
-          outlineAlgorithm: layer.outlineAlgorithm,
-          outlineStrokeStyle: layer.outlineStrokeStyle,
-          colorStyle: layer.colorStyle,
-          outlineColor: layer.outlineColor,
-          outlineThickness: layer.outlineThickness,
-          textAnimDir: layer.textAnimDir,
-          textDrawStyle: layer.textDrawStyle,
-          // Text layer properties
-          kind: layer.kind,
-          textProps: layer.textProps,
-        })) : [],
-        
-        selectedLayerId: state.selectedLayerId,
-        groups: state.groups || [],
-        
-        // Animation settings
-        animStyle: state.animStyle,
-        hand: state.hand,
-        zigzag: state.zigzag,
-        
-        // Drawing settings
-        outlineDetect: state.outlineDetect,
-        outlineAlgorithm: state.outlineAlgorithm,
-        outlineStrokeStyle: state.outlineStrokeStyle,
-        colorStyle: state.colorStyle
-      };
+      const savedState = serializeState();
       
       // Update project data
       project.modifiedAt = new Date().toISOString();
@@ -4482,8 +4519,10 @@ function getImageDataURL(img) {
 }
 
 // Load project
+let loadGeneration = 0; // bumps on every load so stale image callbacks are ignored
 function loadProject(projectId) {
   if (!db) return;
+  const generation = ++loadGeneration;
   
   try {
   const transaction = db.transaction(['projects'], 'readonly');
@@ -4492,6 +4531,7 @@ function loadProject(projectId) {
   
   request.onsuccess = () => {
     const project = request.result;
+    if (generation !== loadGeneration) return; // a newer load was requested
     if (project && project.state) {
       currentProjectId = projectId;
       
@@ -4579,6 +4619,7 @@ function loadProject(projectId) {
           if (layerData.imageDataURL) {
             const img = new Image();
             img.onload = () => {
+              if (generation !== loadGeneration) return;
               const layer = {
                 id: layerData.id,
                 name: layerData.name,
@@ -4635,6 +4676,7 @@ function loadProject(projectId) {
               }
             };
             img.onerror = () => {
+              if (generation !== loadGeneration) return;
               console.error('Failed to load layer image');
               loadedCount++;
               if (loadedCount === totalLayers) {
@@ -4896,7 +4938,12 @@ function refreshProjectsList() {
               <span>${sizeStr}</span>
             </div>
           </div>
-          <button class="project-delete-btn" onclick="deleteProject(${project.id}, event)">
+          <button class="project-file-btn" title="Save to file" onclick="saveProjectToFile(${project.id}, event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </button>
+          <button class="project-delete-btn" title="Delete" onclick="deleteProject(${project.id}, event)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -4969,6 +5016,133 @@ function handleRenameKey(event) {
 
 function updateProjectNameDisplay(name) {
   document.getElementById('project-name-display').textContent = name;
+}
+
+// ═══════════════════════════════════════════
+// PROJECT FILES (save to / open from disk)
+// ═══════════════════════════════════════════
+// Browser storage is tied to one origin and can be cleared, so projects can
+// also be written to a .inkplainer file and opened again later.
+
+const PROJECT_FILE_FORMAT = 'inkplainer-project';
+const PROJECT_FILE_VERSION = 1;
+const PROJECT_FILE_EXT = '.inkplainer';
+
+function projectFileName(name) {
+  const safe = (name || 'Untitled Project').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'project';
+  return safe + PROJECT_FILE_EXT;
+}
+
+function getProjectRecord(projectId) {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(['projects'], 'readonly').objectStore('projects').get(projectId);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function writeProjectFile(fileName, json) {
+  const blob = new Blob([json], { type: 'application/json' });
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: fileName,
+        types: [{ description: 'Inkplainer project', accept: { 'application/json': [PROJECT_FILE_EXT] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return true;
+    } catch (err) {
+      if (err.name === 'AbortError') return false;
+      console.warn('Save picker failed, falling back to download:', err);
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return true;
+}
+
+// Save a project to a file. With no id, saves the project currently open.
+async function saveProjectToFile(projectId = currentProjectId, event) {
+  if (event) event.stopPropagation();
+  if (!db || !projectId) return;
+  try {
+    const project = await getProjectRecord(projectId);
+    if (!project) return;
+    // The open project may have edits newer than the last auto-save
+    const projectState = projectId === currentProjectId ? serializeState() : project.state;
+    const json = JSON.stringify({
+      format: PROJECT_FILE_FORMAT,
+      version: PROJECT_FILE_VERSION,
+      name: project.name,
+      createdAt: project.createdAt,
+      modifiedAt: projectId === currentProjectId ? new Date().toISOString() : project.modifiedAt,
+      state: projectState,
+    });
+    if (await writeProjectFile(projectFileName(project.name), json)) {
+      showToast(`💾 Saved “${project.name}” to file`, null, 3000);
+    }
+  } catch (err) {
+    console.error('Save to file failed:', err);
+    showToast('⚠️ Could not save project file', null, 4000);
+  }
+}
+
+function openProjectFile() {
+  document.getElementById('project-file-input').click();
+}
+
+function handleProjectFileInput(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (file) importProjectFile(file);
+}
+
+// Import a .inkplainer file as a new project and open it
+async function importProjectFile(file) {
+  if (!db) await initDB();
+  try {
+    const data = JSON.parse(await file.text());
+    if (data.format !== PROJECT_FILE_FORMAT || !data.state || !Array.isArray(data.state.layers)) {
+      throw new Error('Not an Inkplainer project file');
+    }
+    if (data.version > PROJECT_FILE_VERSION) {
+      throw new Error('Project file was made by a newer version of Inkplainer');
+    }
+    const now = new Date().toISOString();
+    const project = {
+      name: data.name || file.name.replace(/\.[^.]+$/, ''),
+      createdAt: data.createdAt || now,
+      modifiedAt: now,
+      state: data.state,
+    };
+    const request = db.transaction(['projects'], 'readwrite').objectStore('projects').add(project);
+    request.onsuccess = () => {
+      loadProject(request.result);
+      refreshProjectsList();
+      showToast(`📂 Opened “${project.name}”`, null, 3000);
+    };
+    request.onerror = () => showToast('⚠️ Could not import project — storage may be full', null, 4000);
+  } catch (err) {
+    console.error('Open project file failed:', err);
+    showToast(`⚠️ Could not open project file: ${err.message}`, null, 5000);
+  }
+}
+
+// Installed app: .inkplainer files opened from Finder/Explorer arrive here
+if ('launchQueue' in window) {
+  window.launchQueue.setConsumer(async (params) => {
+    for (const handle of params.files || []) {
+      importProjectFile(await handle.getFile());
+    }
+  });
 }
 
 // Save indicator with time
@@ -5377,6 +5551,20 @@ async function checkStorageUsage() {
   } catch (err) {
     console.warn('Storage estimate failed:', err);
   }
+}
+
+// Offline support + installable app (service workers need HTTPS or localhost)
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker registration failed:', err));
+  });
+}
+
+// Ask the browser not to evict saved projects when disk space runs low
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persisted().then(already => {
+    if (!already) navigator.storage.persist().catch(() => {});
+  }).catch(() => {});
 }
 
 // Initialize on load
