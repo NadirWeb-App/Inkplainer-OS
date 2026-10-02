@@ -60,7 +60,7 @@ If you self-host Inkplainer, you can also bundle `mp4-muxer` locally to avoid th
 
 Your Inkplainer projects; including all layers, settings, and images are saved in your browser's IndexedDB storage. This is local to your browser and device. It cannot be accessed remotely and is not synced to any cloud service.
 
-Clearing your browser's site data will permanently delete your saved projects. Export important projects as video files or keep copies of your source images.
+Clearing your browser's site data will permanently delete your saved projects. Use **Save to File…** in the Projects window to keep a `.inkplainer` copy of important projects on your own device; these files are written only where you choose and are never uploaded.
 
 ---
 

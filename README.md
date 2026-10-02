@@ -23,6 +23,8 @@ Turn images and text into hand-drawn explainer videos — no sign-up, no waterma
 - **Export as MP4 or WebM** — record and download at 720p, 1080p, or 1440p
 - **Export final frame as PNG** — grab a still of the finished animation in one click
 - **Auto-save projects** — every change is saved to your browser automatically; the Projects window shows total storage used across all your saved projects
+- **Project files** — save any project to a `.inkplainer` file and open it again later, on another browser, or on another computer
+- **Install locally** — one-command install with a launcher and desktop shortcut; works offline once loaded
 - **Private by design** — no accounts, no analytics, no tracking; all processing happens locally on your device
 
 ---
@@ -54,6 +56,30 @@ A local static server is required (rather than opening `index.html` directly) du
 >
 > **Browser Support:** Inkplainer runs entirely in the browser. Chrome and Edge are recommended and support both WebM and MP4 export. Firefox and Safari automatically fall back to WebM export when MP4 is unavailable.
 
+
+### Install locally (macOS / Linux)
+
+```bash
+git clone https://github.com/NadirWeb-App/Inkplainer-OS.git
+cd Inkplainer-OS
+./install.sh
+```
+
+This copies the app to `~/.local/share/inkplainer`, adds an `inkplainer` command to `~/.local/bin`, adds an Inkplainer app to `~/Applications` (macOS) or your app menu (Linux), and opens it. It needs `python3`, which macOS and most Linux distributions already have.
+
+```bash
+inkplainer          # start the local server if needed and open the app
+inkplainer stop     # stop the local server
+inkplainer status
+```
+
+The app is always served from the same address, `http://127.0.0.1:8737/`, so projects saved in the browser are still there the next time you open it. (Browser storage belongs to one address: opening the app on a different port or host starts with an empty project list.) Set `INKPLAINER_PORT` before installing to use a different port, run `./install.sh` again to update, and `./install.sh --uninstall` to remove it.
+
+In Chrome or Edge you can also choose **Install Inkplainer** from the address bar to get a standalone window. The installed app opens even when the local server isn't running, and double-clicking a `.inkplainer` file opens it as a new project.
+
+### Saving projects to files
+
+Projects auto-save to browser storage, which can be lost if you clear site data. To keep a copy on disk, open **Projects** and use **Save to File…** for the open project, or the download icon on any project in the list. **Open File…** loads a `.inkplainer` file back in as a new project. Files include every layer image, so they can be moved between browsers and computers, including between the hosted site and a local install.
 
 ### Offline / Air-Gapped Hosting
 Inkplainer relies on two external resources by default:
@@ -341,6 +367,8 @@ inkplainer/
 ├── README.md                      # This file
 ├── PRIVACY.md                     # Privacy policy
 ├── site.webmanifest               # Web application manifest file
+├── sw.js                          # Service worker (offline support, installable app)
+├── install.sh                     # Local install script (macOS / Linux)
 ├── social-preview.svg             # Social preview card image
 ├── Coordinate Mapper Tool V3.html # Hand coordinates configuration utility
 ├── images/                        # Default hand graphics used during animation
