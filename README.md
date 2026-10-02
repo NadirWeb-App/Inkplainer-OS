@@ -65,15 +65,18 @@ cd Inkplainer-OS
 ./install.sh
 ```
 
-This copies the app to `~/.local/share/inkplainer`, adds an `inkplainer` command to `~/.local/bin`, adds an Inkplainer app to `~/Applications` (macOS) or your app menu (Linux), and opens it. It needs `python3`, which macOS and most Linux distributions already have.
+This installs the app as a git clone in `~/.local/share/inkplainer`, adds an `inkplainer` command to `~/.local/bin`, adds an Inkplainer app to `~/Applications` (macOS) or your app menu (Linux), and opens it. It needs `git` and `python3`, which macOS and most Linux distributions already have.
 
 ```bash
-inkplainer          # start the local server if needed and open the app
+inkplainer          # update, start the local server if needed, and open the app
+inkplainer update   # pull the latest version now
 inkplainer stop     # stop the local server
 inkplainer status
 ```
 
-The app is always served from the same address, `http://127.0.0.1:8737/`, so projects saved in the browser are still there the next time you open it. (Browser storage belongs to one address: opening the app on a different port or host starts with an empty project list.) Set `INKPLAINER_PORT` before installing to use a different port, run `./install.sh` again to update, and `./install.sh --uninstall` to remove it.
+**Updates are automatic.** Each time you open it, the launcher pulls the latest version of the repository you installed from. If you installed from a fork, it also merges in this repository's `main`, so your fork's changes and new Inkplainer releases both arrive. If an update can't be applied cleanly (for example, a conflict between your fork and the original), it's skipped and the current version keeps working; when you're offline, the app simply opens as it is.
+
+The app is always served from the same address, `http://127.0.0.1:8737/`, so projects saved in the browser are still there the next time you open it. (Browser storage belongs to one address: opening the app on a different port or host starts with an empty project list.) Set `INKPLAINER_PORT` before installing to use a different port, and run `./install.sh --uninstall` to remove it. See the top of `install.sh` for the other settings.
 
 In Chrome or Edge you can also choose **Install Inkplainer** from the address bar to get a standalone window. The installed app opens even when the local server isn't running, and double-clicking a `.inkplainer` file opens it as a new project.
 
@@ -369,6 +372,9 @@ inkplainer/
 ├── site.webmanifest               # Web application manifest file
 ├── sw.js                          # Service worker (offline support, installable app)
 ├── install.sh                     # Local install script (macOS / Linux)
+├── bin/
+│   ├── inkplainer                 # Launcher for a local install (update, serve, open)
+│   └── serve.py                   # Local web server used by the launcher
 ├── social-preview.svg             # Social preview card image
 ├── Coordinate Mapper Tool V3.html # Hand coordinates configuration utility
 ├── images/                        # Default hand graphics used during animation
