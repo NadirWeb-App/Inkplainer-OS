@@ -343,7 +343,7 @@ inkplainer/
 ├── site.webmanifest               # Web application manifest file
 ├── social-preview.svg             # Social preview card image
 ├── Coordinate Mapper Tool V3.html # Hand coordinates configuration utility
-├── images/                        # Default hand graphics used during animation
+├── images/                        # Default hand graphics used during animation (WebP)
 │   └── [hand image files]
 └── pages/
     └── docs.html                  # Full user documentation page

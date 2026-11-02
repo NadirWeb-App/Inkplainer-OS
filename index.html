@@ -3338,7 +3338,7 @@ input[type="number"]:focus { border-color: var(--accent); }
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Export Video
     </button>
-    <span class="version-pill">v54</span>
+    <span class="version-pill">v55</span>
   </div>
 </div>
 
@@ -6117,6 +6117,11 @@ function _isDrawingGeneration() {
 
 function generate() {
   if (state.layers.length === 0) { showToast('Upload at least one image first'); return; }
+  // Hand images load on demand; make sure they are ready before the first frame
+  preloadCurrentHands().then(_generateStart);
+}
+
+function _generateStart() {
   if (_isDrawingGeneration()) {
     showTopbarBuffer();
     // Two rAFs guarantee the browser has actually painted the indicator before the
@@ -9076,95 +9081,113 @@ const CUSTOM_HANDS = {
   'custom1': {
     name: 'Custom Hand 1',
     images: {
-      720: { path: 'images/hand1-720p.png', width: 432, height: 768, tipX: 229, tipY: 0 },
-      1080: { path: 'images/hand1-1080p.png', width: 648, height: 1152, tipX: 325, tipY: 1 }, 
-      1440: { path: 'images/hand1-1440p.png', width: 864, height: 1536, tipX: 448, tipY: 1 }, 
-      '720v': { path: 'images/hand1vertical-720p.png', width: 720, height: 1280, tipX: 0, tipY: 0 },  
-      '1080v': { path: 'images/hand1vertical-1080p.png', width: 1080, height: 1920, tipX: 0, tipY: 0 }, 
-      '1440v': { path: 'images/hand1vertical-1440p.png', width: 1440, height: 2560, tipX: 0, tipY: 0 }, 
+      720: { path: 'images/hand1-720p.webp', width: 432, height: 768, tipX: 229, tipY: 0 },
+      1080: { path: 'images/hand1-1080p.webp', width: 648, height: 1152, tipX: 325, tipY: 1 }, 
+      1440: { path: 'images/hand1-1440p.webp', width: 864, height: 1536, tipX: 448, tipY: 1 }, 
+      '720v': { path: 'images/hand1vertical-720p.webp', width: 720, height: 1280, tipX: 0, tipY: 0 },  
+      '1080v': { path: 'images/hand1vertical-1080p.webp', width: 1080, height: 1920, tipX: 0, tipY: 0 }, 
+      '1440v': { path: 'images/hand1vertical-1440p.webp', width: 1440, height: 2560, tipX: 0, tipY: 0 }, 
     }
   },
   'custom2': {
     name: 'Custom Hand 2',
     images: {
-      720: { path: 'images/hand2-720p.png', width: 432, height: 768, tipX: 166, tipY: 0 }, 
-      1080: { path: 'images/hand2-1080p.png', width: 648, height: 1152, tipX: 249, tipY: 0 }, 
-      1440: { path: 'images/hand2-1440p.png', width: 864, height: 1536, tipX: 345, tipY: 0 }, 
-      '720v': { path: 'images/hand2vertical-720p.png', width: 720, height: 1280, tipX: 0, tipY: 0 },  
-      '1080v': { path: 'images/hand2vertical-1080p.png', width: 1080, height: 1920, tipX: 0, tipY: 0 },  
-      '1440v': { path: 'images/hand2vertical-1440p.png', width: 1440, height: 2560, tipX: 0, tipY: 0 },  
+      720: { path: 'images/hand2-720p.webp', width: 432, height: 768, tipX: 166, tipY: 0 }, 
+      1080: { path: 'images/hand2-1080p.webp', width: 648, height: 1152, tipX: 249, tipY: 0 }, 
+      1440: { path: 'images/hand2-1440p.webp', width: 864, height: 1536, tipX: 345, tipY: 0 }, 
+      '720v': { path: 'images/hand2vertical-720p.webp', width: 720, height: 1280, tipX: 0, tipY: 0 },  
+      '1080v': { path: 'images/hand2vertical-1080p.webp', width: 1080, height: 1920, tipX: 0, tipY: 0 },  
+      '1440v': { path: 'images/hand2vertical-1440p.webp', width: 1440, height: 2560, tipX: 0, tipY: 0 },  
     }
   },
   'custom3': {
     name: 'Custom Hand 3',
     images: {
-      720: { path: 'images/hand3-720p.png', width: 432, height: 768, tipX: 117, tipY: 0 }, 
-      1080: { path: 'images/hand3-1080p.png', width: 648, height: 1152, tipX: 196, tipY: 0 }, 
-      1440: { path: 'images/hand3-1440p.png', width: 864, height: 1536, tipX: 266, tipY: 1 }, 
-      '720v': { path: 'images/hand3vertical-720p.png', width: 720, height: 1280, tipX: 1, tipY: 0 },  
-      '1080v': { path: 'images/hand3vertical-1080p.png', width: 1080, height: 1920, tipX: 0, tipY: 0 },  
-      '1440v': { path: 'images/hand3vertical-1440p.png', width: 1440, height: 2560, tipX: 0, tipY: 0 }, 
+      720: { path: 'images/hand3-720p.webp', width: 432, height: 768, tipX: 117, tipY: 0 }, 
+      1080: { path: 'images/hand3-1080p.webp', width: 648, height: 1152, tipX: 196, tipY: 0 }, 
+      1440: { path: 'images/hand3-1440p.webp', width: 864, height: 1536, tipX: 266, tipY: 1 }, 
+      '720v': { path: 'images/hand3vertical-720p.webp', width: 720, height: 1280, tipX: 1, tipY: 0 },  
+      '1080v': { path: 'images/hand3vertical-1080p.webp', width: 1080, height: 1920, tipX: 0, tipY: 0 },  
+      '1440v': { path: 'images/hand3vertical-1440p.webp', width: 1440, height: 2560, tipX: 0, tipY: 0 }, 
     }
   },
   'custom4': {
     name: 'Custom Hand 4',
     images: {
-      720: { path: 'images/hand4-720p.png', width: 432, height: 768, tipX: 81, tipY: 628 }, 
-      1080: { path: 'images/hand4-1080p.png', width: 648, height: 1152, tipX: 140, tipY: 904 }, 
-      1440: { path: 'images/hand4-1440p.png', width: 864, height: 1536, tipX: 175, tipY: 1214 }, 
-      '720v': { path: 'images/hand4vertical-720p.png', width: 432, height: 768, tipX: 81, tipY: 628 },  
-      '1080v': { path: 'images/hand4vertical-1080p.png', width: 450, height: 750, tipX: 225, tipY: 150 },
-      '1440v': { path: 'images/hand4vertical-1440p.png', width: 864, height: 1536, tipX: 175, tipY: 1213 }, 
+      720: { path: 'images/hand4-720p.webp', width: 432, height: 768, tipX: 81, tipY: 628 }, 
+      1080: { path: 'images/hand4-1080p.webp', width: 648, height: 1152, tipX: 140, tipY: 904 }, 
+      1440: { path: 'images/hand4-1440p.webp', width: 864, height: 1536, tipX: 175, tipY: 1214 }, 
+      '720v': { path: 'images/hand4vertical-720p.webp', width: 432, height: 768, tipX: 81, tipY: 628 },  
+      '1080v': { path: 'images/hand4vertical-1080p.webp', width: 648, height: 1152, tipX: 140, tipY: 904 },
+      '1440v': { path: 'images/hand4vertical-1440p.webp', width: 864, height: 1536, tipX: 175, tipY: 1213 }, 
     }
   },
   'custom5': {
     name: 'Cartoon',
     images: {
-      720: { path: 'images/hand5-720p.png', width: 180, height: 320, tipX: 0, tipY: 49 },
-      1080: { path: 'images/hand5-1080p.png', width: 270, height: 480, tipX: 1, tipY: 75 },
-      1440: { path: 'images/hand5-1440p.png', width: 360, height: 640, tipX: 1, tipY: 101 },
-      '720v': { path: 'images/hand5vertical-720p.png', width: 180, height: 320, tipX: 0, tipY: 49 },
-      '1080v': { path: 'images/hand5vertical-1080p.png', width: 270, height: 480, tipX: 1, tipY: 75 },
-      '1440v': { path: 'images/hand5vertical-1440p.png', width: 360, height: 640, tipX: 1, tipY: 101 },
+      720: { path: 'images/hand5-720p.webp', width: 180, height: 320, tipX: 0, tipY: 49 },
+      1080: { path: 'images/hand5-1080p.webp', width: 270, height: 480, tipX: 1, tipY: 75 },
+      1440: { path: 'images/hand5-1440p.webp', width: 360, height: 640, tipX: 1, tipY: 101 },
+      '720v': { path: 'images/hand5vertical-720p.webp', width: 180, height: 320, tipX: 0, tipY: 49 },
+      '1080v': { path: 'images/hand5vertical-1080p.webp', width: 270, height: 480, tipX: 1, tipY: 75 },
+      '1440v': { path: 'images/hand5vertical-1440p.webp', width: 360, height: 640, tipX: 1, tipY: 101 },
     }
   },
   'custom6': {
     name: 'Pixel Art',
     images: {
-      720: { path: 'images/hand6-720p.png', width: 180, height: 320, tipX: 19, tipY: 94 },
-      1080: { path: 'images/hand6-1080p.png', width: 270, height: 480, tipX: 29, tipY: 141 },
-      1440: { path: 'images/hand6-1440p.png', width: 360, height: 640, tipX: 34, tipY: 176 },
-      '720v': { path: 'images/hand6vertical-720p.png', width: 180, height: 320, tipX: 19, tipY: 94 },
-      '1080v': { path: 'images/hand6vertical-1080p.png', width: 270, height: 480, tipX: 29, tipY: 141 },
-      '1440v': { path: 'images/hand6vertical-1440p.png', width: 360, height: 640, tipX: 34, tipY: 176 },
+      720: { path: 'images/hand6-720p.webp', width: 180, height: 320, tipX: 19, tipY: 94 },
+      1080: { path: 'images/hand6-1080p.webp', width: 270, height: 480, tipX: 29, tipY: 141 },
+      1440: { path: 'images/hand6-1440p.webp', width: 360, height: 640, tipX: 34, tipY: 176 },
+      '720v': { path: 'images/hand6vertical-720p.webp', width: 180, height: 320, tipX: 19, tipY: 94 },
+      '1080v': { path: 'images/hand6vertical-1080p.webp', width: 270, height: 480, tipX: 29, tipY: 141 },
+      '1440v': { path: 'images/hand6vertical-1440p.webp', width: 360, height: 640, tipX: 34, tipY: 176 },
     }
   }
 };
 
-// Storage for loaded hand images
-const customHandImages = {};
+// Hand images are loaded on demand: only the hand(s) in use, at the current
+// canvas resolution. (Loading all 6 hands x 6 sizes up front was ~36 files.)
+const customHandImages = {};   // customHandImages[handId][resolutionKey] = <img>
+const _handLoads  = {};        // 'handId|res' -> Promise<img|null> (one load per image)
+const _handFailed = new Set(); // 'handId|res' that could not be loaded
 
-// Load all custom hand images for all resolutions
-function loadCustomHandImages() {
-  for (const [handId, handConfig] of Object.entries(CUSTOM_HANDS)) {
-    customHandImages[handId] = {};
-    
-    for (const [resolution, imageData] of Object.entries(handConfig.images)) {
-      const img = new Image();
-      img.onload = () => {
-        customHandImages[handId][resolution] = img;
-        console.log(`✓ Loaded ${handId} at ${resolution}p`);
-      };
-      img.onerror = () => {
-        console.error(`✗ Failed to load ${handId} at ${resolution}p from ${imageData.path}`);
-      };
-      img.src = imageData.path;
-    }
-  }
+function loadHandImage(handId, resolution) {
+  const key = handId + '|' + resolution;
+  if (_handLoads[key]) return _handLoads[key];
+  const conf = CUSTOM_HANDS[handId] && CUSTOM_HANDS[handId].images[resolution];
+  if (!conf) { _handFailed.add(key); return (_handLoads[key] = Promise.resolve(null)); }
+  return (_handLoads[key] = new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      (customHandImages[handId] = customHandImages[handId] || {})[resolution] = img;
+      resolve(img);
+    };
+    img.onerror = () => {
+      console.error(`✗ Failed to load ${handId} at ${resolution}p from ${conf.path}`);
+      _handFailed.add(key);
+      resolve(null);
+    };
+    img.src = conf.path;
+  }));
 }
 
-// Call this when the page loads
-setTimeout(loadCustomHandImages, 100);
+// Make sure the given hands are loaded for the current canvas resolution.
+// Never rejects, so callers can always await it.
+function preloadHands(handIds, resolution = getCurrentResolution()) {
+  return Promise.all([...new Set(handIds)].map(id => loadHandImage(id, resolution)));
+}
+
+// Every hand the next animation could use: the global hand plus each layer's own.
+function preloadCurrentHands() {
+  const known = id => (CUSTOM_HANDS[id] ? id : 'custom1');
+  const ids = new Set([known(state.hand)]);
+  (state.layers || []).forEach(l => ids.add(known(l.hand || state.hand)));
+  return preloadHands([...ids]);
+}
+
+// Warm up the default hand once the page is settled
+setTimeout(preloadCurrentHands, 100);
 
 // Get the appropriate resolution key based on canvas dimensions and orientation
 function getCurrentResolution() {
@@ -9195,6 +9218,12 @@ function drawCustomHand(c, hx, hy, tipX, tipY, style) {
   const resolution = getCurrentResolution();
   const imageConfig = handConfig.images[resolution];
   const img = customHandImages[style] && customHandImages[style][resolution];
+
+  // Not loaded yet: start the load and draw nothing for now; the next frame will have it.
+  if (imageConfig && !img && !_handFailed.has(style + '|' + resolution)) {
+    loadHandImage(style, resolution);
+    return;
+  }
   
   if (!img || !imageConfig) {
     // Image not loaded - show error and fallback to marker
@@ -9312,6 +9341,7 @@ async function startRecording() {
   const progressBar  = document.getElementById('export-progress-bar');
 
   try {
+    await preloadCurrentHands(); // a frame must never be recorded without its hand
     const fmt = state.exportFormat || 'webm';
     if (fmt === 'mp4' && typeof VideoEncoder !== 'undefined') {
       await recordMP4(progressText, progressBar);
