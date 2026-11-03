@@ -4062,7 +4062,7 @@ input[type="number"]:focus { border-color: var(--accent); }
           </svg>
         </div>
         <div class="drop-primary">Drop images or <span>browse</span></div>
-        <div class="drop-secondary">PNG, JPG, GIF, SVG · Multiple files OK</div>
+        <div class="drop-secondary">PNG, JPG, GIF, SVG · Paste (Ctrl+V) · Multiple files OK</div>
       </div>
       <input type="file" id="file-input" accept="image/*" multiple>
 
@@ -5913,7 +5913,7 @@ window.addEventListener('resize', fitCanvas);
 // ─────────────────────────────────────────────
 let _layerIdCounter = 0;
 
-function addLayer(img, name) {
+function addLayer(img, name, posX, posY) {
   pushUndoSnapshot();
   const id = ++_layerIdCounter;
   // Default size: fit within canvas keeping aspect ratio, at 80% of canvas
@@ -5922,8 +5922,8 @@ function addLayer(img, name) {
   const h = Math.round(img.height * scale);
   // Stagger position slightly for each layer
   const offset = (state.layers.length % 5) * 20;
-  const x = Math.round((state.canvasW - w) / 2) + offset;
-  const y = Math.round((state.canvasH - h) / 2) + offset;
+  const x = (posX !== undefined && posX !== null) ? Math.round(posX) : Math.round((state.canvasW - w) / 2) + offset;
+  const y = (posY !== undefined && posY !== null) ? Math.round(posY) : Math.round((state.canvasH - h) / 2) + offset;
 
   // Detect alpha
   let hasPngAlpha = false;
@@ -5985,6 +5985,7 @@ function removeLayer(id) {
   renderLayerList();
   redrawLayersOnCanvas();
   drawSelectionHandles();
+  if (typeof _updateToolToolbar === 'function') _updateToolToolbar();
   scheduleAutoSave();
 }
 
@@ -5993,6 +5994,7 @@ function selectLayer(id) {
   renderLayerList();
   drawSelectionHandles();
   syncSidebarToLayer(id);
+  if (typeof _updateToolToolbar === 'function') _updateToolToolbar();
 }
 
 function syncSidebarToLayer(id) {
@@ -6863,10 +6865,18 @@ function hitTestLayer(px, py) {
 }
 
 const wrapper = document.getElementById('canvas-wrapper');
+let _canvasMousePos = null;
 selectCanvas.style.pointerEvents = 'auto';
+
+selectCanvas.addEventListener('mouseleave', () => {
+  _canvasMousePos = null;
+});
 
 selectCanvas.addEventListener('mousedown', e => {
   if (state.playing) return;
+  if (document.activeElement && document.activeElement !== document.body && document.activeElement.tagName !== 'CANVAS') {
+    document.activeElement.blur();
+  }
   const {x,y} = toCanvasCoords(e);
 
   // ── Text placement mode: click to open editor ──
@@ -6896,22 +6906,34 @@ selectCanvas.addEventListener('mousedown', e => {
       return;
     }
   }
-  // Click to select a different layer
+  // Click to select a different layer and immediately start moving it
   const hit = hitTestLayer(x,y);
-  if (hit) { selectLayer(hit.id); }
-  else { state.selectedLayerId = null; renderLayerList(); drawSelectionHandles(); }
+  if (hit) {
+    selectLayer(hit.id);
+    _interact = {type:'move', startX:x, startY:y, orig:{x:hit.x,y:hit.y,w:hit.w,h:hit.h}};
+  } else {
+    state.selectedLayerId = null;
+    renderLayerList();
+    drawSelectionHandles();
+    if (typeof _updateToolToolbar === 'function') _updateToolToolbar();
+  }
 });
 
-selectCanvas.addEventListener('mousemove', e => {
+function onCanvasOrGlobalMove(e) {
   if (state.playing) return;
   const {x,y} = toCanvasCoords(e);
+  if (e.target === selectCanvas) {
+    _canvasMousePos = {x, y};
+  }
   const sel = getSelectedLayer();
   if (!_interact) {
-    // Cursor feedback
-    if (sel) {
-      const handle = hitTestHandle(x,y,sel);
-      selectCanvas.style.cursor = handle ? 'nwse-resize' : (x>=sel.x&&x<=sel.x+sel.w&&y>=sel.y&&y<=sel.y+sel.h ? 'move' : 'default');
-    } else { selectCanvas.style.cursor = 'default'; }
+    // Cursor feedback when hovering selectCanvas
+    if (e.target === selectCanvas) {
+      if (sel) {
+        const handle = hitTestHandle(x,y,sel);
+        selectCanvas.style.cursor = handle ? 'nwse-resize' : (x>=sel.x&&x<=sel.x+sel.w&&y>=sel.y&&y<=sel.y+sel.h ? 'move' : 'default');
+      } else { selectCanvas.style.cursor = 'default'; }
+    }
     return;
   }
   if (!sel) return;
@@ -6942,6 +6964,11 @@ selectCanvas.addEventListener('mousemove', e => {
     const inp = document.querySelector(`#ls-${sel.id} input[onchange*="'${p}'"]`);
     if(inp) inp.value = Math.round(sel[p]);
   });
+}
+
+selectCanvas.addEventListener('mousemove', onCanvasOrGlobalMove);
+document.addEventListener('mousemove', e => {
+  if (_interact) onCanvasOrGlobalMove(e);
 });
 
 // Double-click a text layer on canvas to re-edit it
@@ -8217,6 +8244,178 @@ function loadImageFile(file) {
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CLIPBOARD PASTE & CANVAS DROP (Ctrl+V / Cmd+V & direct drag-and-drop)
+// ═══════════════════════════════════════════════════════════════════════════
+document.addEventListener('paste', handleClipboardPaste);
+
+function handleClipboardPaste(e) {
+  const activeEl = document.activeElement;
+  const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+  const cData = e.clipboardData || window.clipboardData;
+  if (!cData) return;
+
+  const hasText = cData.types && (cData.types.includes('text/plain') || cData.types.includes('Text'));
+  const plainText = hasText ? cData.getData('text/plain') : '';
+
+  // 1. Extract image files from clipboard items or files
+  const imageFiles = [];
+  if (cData.files && cData.files.length > 1) {
+    // Multiple distinct files copied from file manager
+    for (let i = 0; i < cData.files.length; i++) {
+      const f = cData.files[i];
+      if (f.type && f.type.startsWith('image/')) imageFiles.push(f);
+    }
+  } else if (cData.items && cData.items.length > 0) {
+    // Single clipboard object potentially offered in multiple format representations (PNG, TIFF, JPEG).
+    // Pick the best format (prefer lossless PNG) to prevent duplicate stacked layers of the same image.
+    let bestItem = null;
+    for (let i = 0; i < cData.items.length; i++) {
+      const item = cData.items[i];
+      if (item.type === 'image/png') {
+        bestItem = item;
+        break;
+      } else if (!bestItem && item.type && item.type.startsWith('image/')) {
+        bestItem = item;
+      }
+    }
+    if (bestItem) {
+      const f = bestItem.getAsFile();
+      if (f) imageFiles.push(f);
+    }
+  }
+  if (imageFiles.length === 0 && cData.files && cData.files.length > 0) {
+    const f = cData.files[0];
+    if (f.type && f.type.startsWith('image/')) imageFiles.push(f);
+  }
+
+  // If focused on an input/textarea and text is being pasted, let native paste handle it
+  if (isInput && hasText && imageFiles.length === 0) return;
+
+  // Process image files
+  if (imageFiles.length > 0) {
+    e.preventDefault();
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
+    if (state.playing) { state.playing = false; updatePlayIcons(); }
+    switchTab('image');
+
+    const targetPos = _canvasMousePos ? { ..._canvasMousePos } : null;
+    let count = 0;
+    imageFiles.forEach((file, idx) => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          let posX = null, posY = null;
+          if (targetPos) {
+            const scale = Math.min(state.canvasW / img.width, state.canvasH / img.height) * 0.8;
+            const w = Math.round(img.width * scale);
+            const h = Math.round(img.height * scale);
+            const stagger = idx * 20;
+            posX = Math.max(0, Math.min(state.canvasW - w, targetPos.x - w / 2 + stagger));
+            posY = Math.max(0, Math.min(state.canvasH - h, targetPos.y - h / 2 + stagger));
+          }
+          const name = file.name && !file.name.match(/^image\.\w+$/i)
+            ? file.name.replace(/\.[^.]+$/, '')
+            : `Pasted Image ${state.layers.length + 1}`;
+          addLayer(img, name, posX, posY);
+          count++;
+          showToast(imageFiles.length > 1 ? `Image pasted (${count}/${imageFiles.length})` : 'Image pasted from clipboard');
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+    return;
+  }
+
+  // 2. Fallback: handle pasted base64 Data URLs (e.g. data:image/png;base64,...)
+  if (!isInput && plainText && plainText.trim().startsWith('data:image/')) {
+    e.preventDefault();
+    if (state.playing) { state.playing = false; updatePlayIcons(); }
+    switchTab('image');
+    const img = new Image();
+    img.onload = () => {
+      let posX = null, posY = null;
+      if (_canvasMousePos) {
+        const scale = Math.min(state.canvasW / img.width, state.canvasH / img.height) * 0.8;
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        posX = Math.max(0, Math.min(state.canvasW - w, _canvasMousePos.x - w / 2));
+        posY = Math.max(0, Math.min(state.canvasH - h, _canvasMousePos.y - h / 2));
+      }
+      addLayer(img, `Pasted Image ${state.layers.length + 1}`, posX, posY);
+      showToast('Image pasted from data URL');
+    };
+    img.src = plainText.trim();
+    return;
+  }
+
+  // 3. Fallback: handle pasted raw SVG markup
+  if (!isInput && plainText && plainText.trim().startsWith('<svg') && plainText.trim().endsWith('</svg>')) {
+    e.preventDefault();
+    if (state.playing) { state.playing = false; updatePlayIcons(); }
+    switchTab('image');
+    const blob = new Blob([plainText.trim()], { type: 'image/svg+xml;charset=utf-8' });
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        let posX = null, posY = null;
+        if (_canvasMousePos) {
+          const scale = Math.min(state.canvasW / img.width, state.canvasH / img.height) * 0.8;
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          posX = Math.max(0, Math.min(state.canvasW - w, _canvasMousePos.x - w / 2));
+          posY = Math.max(0, Math.min(state.canvasH - h, _canvasMousePos.y - h / 2));
+        }
+        addLayer(img, `Pasted SVG ${state.layers.length + 1}`, posX, posY);
+        showToast('SVG pasted as new layer');
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(blob);
+    return;
+  }
+}
+
+// ─── DIRECT CANVAS DRAG & DROP ───
+const canvasWrapperEl = document.getElementById('canvas-wrapper');
+if (canvasWrapperEl) {
+  canvasWrapperEl.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+  });
+  canvasWrapperEl.addEventListener('drop', e => {
+    const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+    if (!files.length) return;
+    e.preventDefault();
+    if (state.playing) { state.playing = false; updatePlayIcons(); }
+    switchTab('image');
+    const dropCoords = toCanvasCoords(e);
+    files.forEach((file, idx) => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(state.canvasW / img.width, state.canvasH / img.height) * 0.8;
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const stagger = idx * 20;
+          const posX = Math.max(0, Math.min(state.canvasW - w, dropCoords.x - w / 2 + stagger));
+          const posY = Math.max(0, Math.min(state.canvasH - h, dropCoords.y - h / 2 + stagger));
+          addLayer(img, file.name.replace(/\.[^.]+$/, ''), posX, posY);
+          showToast('Image dropped onto canvas');
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
